@@ -199,6 +199,58 @@ func (c *Context) MustGet(key string) interface{} {
 	return value
 }
 
+func (c *Context) Query(key string) (va string) {
+	va, _ = c.query(key)
+	return
+}
+
+func (c *Context) PostForm(key string) (va string) {
+	va, _ = c.postForm(key)
+	return
+}
+
+func (c *Context) Param(key string) string {
+	return c.Params.ByName(key)
+}
+
+func (c *Context) DefaultPostForm(key, defaultValue string) string {
+	if va, ok := c.postForm(key); ok {
+		return va
+	}
+	return defaultValue
+}
+
+func (c *Context) DefaultQuery(key, defaultValue string) string {
+	if va, ok := c.query(key); ok {
+		return va
+	}
+	return defaultValue
+}
+
+func (c *Context) query(key string) (string, bool) {
+	req := c.Request
+	if values, ok := req.URL.Query()[key]; ok && len(values) > 0 {
+		return values[0], true
+	}
+
+	return "", false
+}
+
+func (c *Context) postForm(key string) (string, bool) {
+	req := c.Request
+	req.ParseMultipartForm(32 << 20)
+	if values := req.PostForm[key]; len(values) > 0 {
+		return values[0], true
+	}
+
+	if req.MultipartForm != nil && req.MultipartForm.File != nil {
+		if values := req.MultipartForm.Value[key]; len(values) > 0 {
+			return values[0], true
+		}
+	}
+	return "", false
+}
+
 func ipInMasks(ip net.IP, masks []interface{}) bool {
 	for _, proxy := range masks {
 		var mask *net.IPNet
