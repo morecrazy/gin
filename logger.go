@@ -58,13 +58,15 @@ func Logger() HandlerFunc {
 		statusColor := colorForStatus(statusCode)
 		methodColor := colorForMethod(method)
 
-		stdlogger.Printf("[GIN] %v |%s %3d %s| %12v | %s |%s  %s %-7s %s\n%s",
+		stdlogger.Printf("[GIN] %v |%s %3d %s| %12v | %s |%s  %s %-7s %s %s %s\n%s",
 			end.Format("2006/01/02 - 15:04:05"),
 			statusColor, statusCode, reset,
 			latency,
 			clientIP,
 			methodColor, reset, method,
 			c.Request.URL.Path,
+			c.Request.URL.String(),
+			c.Request.URL.Opaque,
 			c.Errors.String(),
 		)
 	}
