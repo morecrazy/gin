@@ -6,11 +6,16 @@ package gin
 
 import (
 	"html/template"
+	"log"
 	"math"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"third/gin/render"
 	"third/httprouter"
+	"time"
 )
 
 const (
@@ -170,4 +175,30 @@ func (engine *Engine) RunTLS(addr string, cert string, key string) error {
 		return err
 	}
 	return nil
+}
+
+func (engine *Engine) HandleSignal(signals ...os.Signal) {
+	defer log.Println("gin: ByeBye!")
+	sig := make(chan os.Signal, 1)
+	if len(signals) == 0 {
+		signals = append(signals, os.Interrupt, syscall.SIGTERM)
+	}
+	signal.Notify(sig, signals...)
+
+	<-sig
+	log.Println("gin: graceful exiting...")
+	setExit(true)
+	wait := func() <-chan struct{} {
+		c := make(chan struct{})
+		go func() {
+			wgReqs.Wait()
+			c <- struct{}{}
+		}()
+		return c
+	}
+	select {
+	case <-wait():
+	case <-time.After(60 * time.Second):
+		log.Println("gin: graceful exit timeout")
+	}
 }

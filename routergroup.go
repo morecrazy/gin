@@ -5,8 +5,10 @@
 package gin
 
 import (
+	"fmt"
 	"net/http"
 	"path"
+	"sync"
 	"third/httprouter"
 )
 
@@ -16,6 +18,25 @@ type RouterGroup struct {
 	Handlers     []HandlerFunc
 	absolutePath string
 	engine       *Engine
+}
+
+// variables for graceful exit
+var numReqs int64 = 0 // number of requests in processing
+var wgReqs = &sync.WaitGroup{}
+var bExiting bool = false
+var bExitingMu = &sync.RWMutex{}
+
+func isExiting() bool {
+	bExitingMu.RLock()
+	exit := bExiting
+	bExitingMu.RUnlock()
+	return exit
+}
+
+func setExit(exit bool) {
+	bExitingMu.Lock()
+	bExiting = exit
+	bExitingMu.Unlock()
 }
 
 // Adds middlewares to the group, see example code in github.
@@ -53,10 +74,20 @@ func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers []Han
 	}
 
 	group.engine.router.Handle(httpMethod, absolutePath, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		context := group.engine.createContext(w, req, params, handlers)
-		context.Next()
-		context.Writer.WriteHeaderNow()
-		group.engine.reuseContext(context)
+		if !isExiting() {
+			wgReqs.Add(1)
+			defer wgReqs.Done()
+
+			context := group.engine.createContext(w, req, params, handlers)
+			context.Next()
+			context.Writer.WriteHeaderNow()
+			group.engine.reuseContext(context)
+		} else {
+			context := group.engine.createContext(w, req, params, handlers)
+			context.AbortWithStatus(http.StatusInternalServerError)
+			fmt.Fprint(context.Writer, "server is exiting, new request is rejected")
+			group.engine.reuseContext(context)
+		}
 	})
 }
 
