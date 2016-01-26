@@ -345,7 +345,7 @@ func (c *Context) Bind(obj interface{}) bool {
 	var b binding.Binding
 	ctype := filterFlags(c.Request.Header.Get("Content-Type"))
 	switch {
-	case c.Request.Method == "GET" || ctype == MIMEPOSTForm:
+	case c.Request.Method == "GET" || c.Request.Method == "DELETE" || ctype == MIMEPOSTForm:
 		b = binding.Form
 	case ctype == MIMEMultipartPOSTForm:
 		b = binding.MultipartForm
