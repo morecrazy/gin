@@ -21,6 +21,42 @@ var (
 	reset   = string([]byte{27, 91, 48, 109})
 )
 
+var levelNames = []string{
+	"CRITICAL",
+	"ERROR",
+	"WARNING",
+	"NOTICE",
+	"INFO",
+	"DEBUG",
+}
+
+type LeveledLogger interface {
+	GetLevelExt() map[string]int
+	SetLevelExt(int, string)
+}
+
+type LoggerInfo struct {
+	Name    string
+	LLogger LeveledLogger
+}
+
+func getLevelName(l int) string {
+	if l < 0 || l >= len(levelNames) {
+		return "unknown"
+	}
+	return levelNames[l]
+}
+
+func getNameLevel(name string) int {
+	for k, v := range levelNames {
+		if v == name {
+			return k
+		}
+	}
+
+	return 0
+}
+
 func ErrorLogger() HandlerFunc {
 	return ErrorLoggerT(ErrorTypeAll)
 }
