@@ -59,6 +59,7 @@ func main() {
 
 * Graceful exit: send intterupt(`Ctrl+C`)/kill(`kill -9 pid`) signal to process or `curl http://localhost:8082/admin/gracefulexit` 
 * Show log level: `http://localhost:8082/admin/show_log_level`
+
 ```json
 {
   "Data": [
@@ -76,7 +77,9 @@ func main() {
   "Status": "OK"
 }
 ```
+
 * Change log level: `curl http://localhost:8082/admin/set_log_level -d 'name=defautllogger&level=DEBUG'`
+
 ```json
 {
   "Data": [
@@ -94,6 +97,7 @@ func main() {
   "Status": "OK"
 }
 ```
+
 * Call custom handler: `curl http://localhost:8082/hi`
 
 ### Limitations
