@@ -198,6 +198,7 @@ func (engine *Engine) HandleSignal(signals ...os.Signal) {
 	}
 	select {
 	case <-wait():
+		log.Println("gin: graceful exit OK")
 	case <-time.After(60 * time.Second):
 		log.Println("gin: graceful exit timeout")
 	}
