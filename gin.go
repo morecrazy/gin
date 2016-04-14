@@ -239,7 +239,7 @@ func gracefulExit() {
 }
 
 // gin admin server, for dynamic set log level, graceful exit, etc.
-func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) {
+func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) *Engine {
 	engine := New()
 	engine.logger = logger
 	g := engine.Group("/admin")
@@ -254,6 +254,8 @@ func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) {
 	}
 
 	go engine.Run(addr)
+
+	return engine
 }
 
 func (engine *Engine) showloglevelHandler(c *Context) {
