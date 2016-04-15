@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"third/gin/binding"
 	"third/gin/render"
@@ -327,8 +328,41 @@ func ForwardedFor(proxies ...interface{}) HandlerFunc {
 	}
 }
 
+// ClientIP returns client real IP
 func (c *Context) ClientIP() string {
-	return c.Request.RemoteAddr
+	clientIP := c.Request.Header.Get("http_x_forwarded_for")
+	if clientIP != "" {
+		return clientIP
+	}
+	clientIP = c.Request.Header.Get("X-Forwarded-For")
+	if clientIP != "" {
+		return clientIP
+	}
+	clientIP = c.Request.Header.Get("X-Real-IP")
+	if clientIP != "" {
+		return clientIP
+	}
+	h, _, _ := net.SplitHostPort(c.Request.RemoteAddr)
+	return h
+}
+
+// GetReqID return codoon request_id from header
+func (c *Context) GetReqID() int64 {
+	s := c.Request.Header.Get("codoon_request_id")
+	id, _ := strconv.ParseInt(s, 10, 64)
+	return id
+}
+
+// SetReqID set reqID+1 into header. If reqID == 0, it will get reqID from header and set reqID+1 to header
+func (c *Context) SetReqID(reqID int64) int64 {
+	if reqID == 0 {
+		reqID = c.GetReqID()
+		reqID += 1
+	} else {
+		reqID += 1
+	}
+	c.Request.Header.Set("codoon_request_id", strconv.FormatInt(reqID, 10))
+	return reqID
 }
 
 /************************************/
