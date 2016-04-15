@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"third/gin"
-
 	"third/go-logging"
 )
 
@@ -25,6 +24,7 @@ func initLog() []gin.LoggerInfo {
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	leveledBackend := logging.AddModuleLevel(backend)
 	leveledBackend.SetLevel(logging.INFO, "")
+	log.SetBackend(leveledBackend)
 	return []gin.LoggerInfo{
 		gin.LoggerInfo{
 			Name:    "defautllogger",
@@ -34,12 +34,18 @@ func initLog() []gin.LoggerInfo {
 }
 
 func hiHandler(c *gin.Context) {
+	// SetReqID set reqID+1 into header. If reqID == 0, it will get reqID from header and set reqID+1 to header
+	c.SetReqID(2016)
+	// ClientIP return client real IP based on codoon habit
+	log.Info("ip:%s", c.ClientIP())
+	// GetReqID return request id based on codoon habit
+	log.Info("req_id:%d", c.GetReqID())
 	c.JSON(http.StatusOK, gin.H{"rsp": "hi"})
 }
 
 func main() {
 	loggers := initLog()
-
+	// prepare customized handlers for AdminServer
 	handlers := []gin.HandlerInfo{
 		gin.HandlerInfo{
 			Method:  "GET",
@@ -47,12 +53,14 @@ func main() {
 			Handler: hiHandler,
 		},
 	}
+	// AdminServer is only utilized for OPS, your logic should launch another ginengine server.
 	ginengine := gin.UseAdminServer(":8082", loggers, handlers)
 	// By default, HandleSignal captures interrupt, kill signals.
 	// Your can pass other signas to it.
 	ginengine.HandleSignal()
 
 }
+
 ```
 
 ### Usage
