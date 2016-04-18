@@ -6,6 +6,7 @@ package gin
 
 import (
 	"encoding/xml"
+	"net/http"
 	"reflect"
 	"runtime"
 	"strings"
@@ -79,4 +80,10 @@ func lastChar(str string) uint8 {
 
 func nameOfFunction(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+}
+
+func WrapF(f http.HandlerFunc) HandlerFunc {
+	return func(c *Context) {
+		f(c.Writer, c.Request)
+	}
 }

@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -238,15 +239,21 @@ func gracefulExit() {
 	exitOnce.Do(onceFunc)
 }
 
-// gin admin server, for dynamic set log level, graceful exit, etc.
+// gin admin server, for dynamic set log level, graceful exit, pprof, etc.
 func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) *Engine {
 	engine := New()
 	engine.logger = logger
 	g := engine.Group("/admin")
 	{
+		// log level
 		g.GET("/show_log_level", engine.showloglevelHandler)
 		g.POST("/set_log_level", engine.setloglevelHandler)
+		// graceful exit
 		g.GET("/gracefulexit", engine.gracefulExitHandler)
+		// pprof
+		g.GET("/debug/pprof/", WrapF(pprof.Index))
+		g.GET("/debug/pprof/:name", pprofHandler)
+
 	}
 
 	for _, h := range handler {
@@ -319,4 +326,23 @@ func codoonRsp(c *Context, status string, data interface{}, desc interface{}) {
 		"Data":        data,
 		"Description": desc,
 	})
+}
+
+func pprofHandler(c *Context) {
+	// there is a hard-coding in net/http/pprof package, so we rewrite `index` route
+	name := c.Param("name")
+	log.Printf("[%s]", name)
+	switch name {
+	case "cmdline":
+		pprof.Cmdline(c.Writer, c.Request)
+	case "profile":
+		pprof.Profile(c.Writer, c.Request)
+	case "symbol":
+		pprof.Symbol(c.Writer, c.Request)
+	case "trace":
+		pprof.Trace(c.Writer, c.Request)
+	default:
+		pprof.Handler(name).ServeHTTP(c.Writer, c.Request)
+
+	}
 }
