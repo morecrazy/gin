@@ -28,6 +28,7 @@ const (
 	MIMEXML2              = "text/xml"
 	MIMEPlain             = "text/plain"
 	MIMEPOSTForm          = "application/x-www-form-urlencoded"
+	MIMEPOSTForm2B        = "application/x-www-form-urlencode" // be compatible with codoon Android. WTF!
 	MIMEMultipartPOSTForm = "multipart/form-data"
 )
 
