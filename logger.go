@@ -99,7 +99,7 @@ func Logger() HandlerFunc {
 			statusColor, statusCode, reset,
 			latency,
 			clientIP,
-			methodColor, reset, method,
+			methodColor, method, reset,
 			c.Request.URL.Path,
 			c.Request.URL.String(),
 			c.Request.URL.Opaque,
