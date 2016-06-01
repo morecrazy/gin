@@ -261,7 +261,12 @@ func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) *En
 		engine.RigsterHttpHandler(h)
 	}
 
-	go engine.Run(addr)
+	go func() {
+		if err := engine.Run(addr); err != nil {
+			log.Printf("run UseAdminServer [addr:%s] error:%v", addr, err)
+			os.Exit(1)
+		}
+	}()
 
 	return engine
 }
