@@ -254,6 +254,7 @@ func UseAdminServer(addr string, logger []LoggerInfo, handler []HandlerInfo) *En
 		// pprof
 		g.GET("/debug/pprof/", WrapF(pprof.Index))
 		g.GET("/debug/pprof/:name", pprofHandler)
+		g.POST("/debug/pprof/:name", pprofHandler)
 
 	}
 
